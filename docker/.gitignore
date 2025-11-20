@@ -1,3 +1,2 @@
-./files/*
-file/*
-./nginx/cert/*
+files/*
+nginx/cert/*
