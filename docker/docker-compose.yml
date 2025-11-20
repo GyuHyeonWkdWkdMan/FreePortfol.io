@@ -8,6 +8,7 @@ networks:
 
 services:
   nginx:
+    container_name: portfolio-nginx
     image: nginx:1.21.5-alpine
     ports:
       - '80:80'
@@ -20,8 +21,8 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./nginx/ssl:/etc/nginx/ssl
       - ./files:/home/app/files/
-    # depends_on:
-    #   - backend
+    depends_on:
+      - portfolio-backend-fastapi
     networks:
       - portfolio-network-1
 
@@ -52,5 +53,15 @@ services:
       - db:/var/lib/mysql
       - ./mysql/initdb.d:/docker-entrypoint-initdb.d
       - ./mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - portfolio-network-1
+
+  portfolio-backend-fastapi:
+    container_name: portfolio-backend
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    ports:
+      - 8030:8030
     networks:
       - portfolio-network-1
