@@ -1,0 +1,56 @@
+volumes:
+  db:
+  files:
+
+networks:
+  portfolio-network-1:
+
+
+services:
+  nginx:
+    image: nginx:1.21.5-alpine
+    ports:
+      - '80:80'
+      - '446:446'
+    environment:
+      - TZ=Asia/Seoul
+    restart: always
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./files:/home/app/files/
+    # depends_on:
+    #   - backend
+    networks:
+      - portfolio-network-1
+
+  db:
+    image: mysql:8.0
+    container_name: portfolio-db
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+    environment:
+      MYSQL_DATABASE: portfolio
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      TZ: Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    entrypoint: bash -c "chmod 644 /etc/mysql/my.cnf && docker-entrypoint.sh mysqld"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - ./files:/home/app/files/
+      - ./media:/home/app/media/
+      - db:/var/lib/mysql
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - portfolio-network-1
